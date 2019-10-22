@@ -44,3 +44,13 @@ Obs.: </br>
 
 8 - git push origin --delete commit_v3 -- Deleta uma Branch
 
+-- Remover arquivos ....
+
+9 - git rm file1.txt
+git commit -m "remove file1.txt"
+Mas se você deseja remover o arquivo apenas do repositório Git e não do sistema de arquivos, use:
+git rm file1.txt
+git commit -m "remove file1.txt"
+
+-- E para enviar alterações para repo remoto
+git push origin branch_name  
