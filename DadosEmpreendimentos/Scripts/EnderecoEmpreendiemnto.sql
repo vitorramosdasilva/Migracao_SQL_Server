@@ -1,8 +1,11 @@
 Use [REBUAUTST01];
 
+If Object_Id('tempdb..#Tb_Estoque') Is Not Null Drop Table #Tb_Estoque
+If Object_Id('tempdb..#Tab_Dif') Is Not Null Drop Table #Tab_Dif
+
 Set NoCount On;   
 
-Select top(5)
+Select 
 	    GetDate()				As 'PesqDataHora' 
 	   ,(Year(GetDate()) * 100) + 
 			   Month(GetDate()) As 'PesqMesAno' 
@@ -11,7 +14,7 @@ Select top(5)
 	   ,UP.Obra_unid			As 'ObraCod' 
 	   ,O.descr_obr				As 'ObraDesc'
 	   ,DP.Projeto_fidcdp		As 'ProdProjeto' -- Id_PROJETO
-	  -- ,CHARINDEX('-', UP.Prod_unid, 1) AS ProdCodTeste
+
 	   ,UP.Prod_unid			As 'ProdCod' 
 	   ,P.Descricao_psc			As 'ProdDesc' --Nome_Real_Empreendimento
 	   ,PC.CodCat_cp			As 'ProdCategCod' 
@@ -46,6 +49,7 @@ Select top(5)
 
 	   ,UD.NumBrrLogBrr_udt 
 	   ,UD.NumLogrLogBrr_udt 
+
 	   ,EL.Desc_Logr			As 'ProdEndLogradouro' --
 	   ,UD.NumEnd_udt			As 'ProdEndNum' 
 	   ,UD.ComplEnd_udt			As 'ProdEndCompl' 
@@ -53,16 +57,20 @@ Select top(5)
 	   ,EB.Desc_brr				As 'ProdEndBairro' --Bairro
 	   ,EC.Desc_cid				As 'ProdEndCidade' --Municipio
 	   ,EC.DescUF_cid			As 'ProdEndUF' --uf
+
 	   ,V.Num_Ven				As 'VendaNumero' 
 	   ,V.Data_Ven				As 'VendaData' 
 	   ,V.Cliente_Ven			As 'ClienteCodigo' 
 	   ,C.nome_pes				As 'ClienteNome'
+	   
 
-		--UDoP.cod_pes			As 'UnidINTERVENIENTE_DepositarioCodigo' 
-		--UDoP.nome_pes			As 'UnidINTERVENIENTE_DepositarioNome'
+		--,UDoP.cod_pes			As 'UnidINTERVENIENTE_DepositarioCodigo' 
+		--,UDoP.nome_pes			As 'UnidINTERVENIENTE_DepositarioNome'
 		 
-	   ,UPrs.*
-	   ,UDo.*
+	    --,UPrs.*
+	    --,UDo.*
+
+	Into #Tb_Estoque
 
   From dbo.UnidadePer UP With (NoLock)
    
@@ -142,43 +150,161 @@ Select top(5)
  Where (UP.Empresa_unid Between 30000 And 39999 
 		Or UP.Empresa_unid  = 20000) 
 		And UP.Prod_unid	>	9999
-
+/*
 		/*And UP.Empresa_unid not in (30030)*/ 
 		--And UP.Obra_unid /*like '2S08%' */in ('2S18A''2S18B''3S18A''3S18B''3S36A')
 		--And UDo.Empresa is null
 	    --And UD.Descr_udt is NULL
 	    --And UD.NumBrrLogBrr_udt=57111
 	    --And UP.Prod_unid in (1008420084)
+		*/
 
 		And UP.Prod_unid = 20056
+		--And DP.Projeto_fidcdp = 'P0001-A'
+		 And Desc_brr <> '..'
 		--And UP.Identificador_unid = 'Q01-L01'
 		-- Order by UP.Empresa_unid, UP.Obra_unid, UP.Identificador_unid
 Order by 
  P.Descricao_psc 
 ,UP.Identificador_unid
 
-Select Top(10) * From  [REBUAUPRD01_COMPLEMENTO].[dbo].[DadosEmpreendimentos_201910]
---Select Top(50) * From  REBUAUPRD01_COMPLEMENTO.dbo.VwREBr_UAU_UnidadeDepositarios 
---Select Top(50) * From REBUAUPRD01_COMPLEMENTO.dbo.VwREBr_UAU_UnidadeProprietarios
+Select Distinct
+
+	e.ID_Projeto, 
+	lower(e.Bairro) As Bairro , lower([REBUAUPRD01_COMPLEMENTO].[dbo].[Fn_Remove_Acentuacao](t.ProdEndBairro)) As ProdEndBairro, 
+	Replace(Replace(e.CEP,'-',''),'.','') As CEP, rtrim(ltrim(t.ProdEndCEP)) As ProdEndCEP, 
+	lower(e.UF) As UF, lower(t.ProdEndUF) As ProdEndUF,
+	lower(e.Municipio) As Municipio, lower(t.ProdEndCidade) As ProdEndCidade,
+	lower(Case 
+	When e.Tipo_Logr = 'AV' Then 'Avenida ' + e.Endereço
+	When e.Tipo_Logr = 'R' Then 'Rua '		+ e.Endereço
+	When e.Tipo_Logr = 'Q' Then 'Quadra '	+ e.Endereço
+	When e.Tipo_Logr = 'EST' Then 'Estrada '+ e.Endereço
+	When e.Tipo_Logr = 'ROD' Then 'Rodovia '+ e.Endereço
+	When e.Tipo_Logr = 'FAZ' Then 'Fazenda '+ e.Endereço
+Else
+	''
+End) As 'Endereco' , Lower([REBUAUPRD01_COMPLEMENTO].[dbo].[Fn_Remove_Acentuacao](t.ProdEndLogradouro)) As ProdEndLogradouro,
+lower(e.Numero) As Numero, Lower(t.ProdEndNum) As ProdEndNum
+Into #Tab_Dif
+From  [REBUAUPRD01_COMPLEMENTO].[dbo].[DadosEmpreendimentos_201910] e
+Inner Join #Tb_Estoque t
+			On t.ProdProjeto = e.ID_Projeto 
+Where Not Exists (Select 1 From #Tb_Estoque te 
+					Where 
+					te.ProdProjeto = e.ID_Projeto
+
+						--And lower(te.ProdEndBairro) = lower(e.Bairro)
+												
+						And Replace(Replace(te.ProdEndCEP,'-',''),'.','') = Replace(Replace(e.CEP,'-',''),'.','')						
+						And Lower(te.ProdEndCidade) = Lower(e.Municipio)
+						And Lower(te.ProdEndLogradouro) = lower(Case 
+														When e.Tipo_Logr = 'AV' Then 'Avenida '	 + [REBUAUPRD01_COMPLEMENTO].[dbo].[Fn_Remove_Acentuacao](e.Endereço)
+														When e.Tipo_Logr = 'R' Then 'Rua '		 + [REBUAUPRD01_COMPLEMENTO].[dbo].[Fn_Remove_Acentuacao](e.Endereço)
+														When e.Tipo_Logr = 'Q' Then 'Quadra '	 + [REBUAUPRD01_COMPLEMENTO].[dbo].[Fn_Remove_Acentuacao](e.Endereço)
+														When e.Tipo_Logr = 'EST' Then 'Estrada ' + [REBUAUPRD01_COMPLEMENTO].[dbo].[Fn_Remove_Acentuacao](e.Endereço)
+														When e.Tipo_Logr = 'ROD' Then 'Rodovia ' + [REBUAUPRD01_COMPLEMENTO].[dbo].[Fn_Remove_Acentuacao](e.Endereço)
+														When e.Tipo_Logr = 'FAZ' Then 'Fazenda ' + [REBUAUPRD01_COMPLEMENTO].[dbo].[Fn_Remove_Acentuacao](e.Endereço)
+													Else
+													 ''
+													End)
+						--And te.ProdEndNum = e.Numero
+						--And te.ProdEndComplemento = e.Numero
+						And lower(te.ProdEndUF) = lower(e.UF)
+						)
+				
+
+Select * From #Tab_Dif f
+
+If Object_Id('tempdb..#Tb_Estoque') Is Not Null Drop Table #Tb_Estoque
+If Object_Id('tempdb..#Tab_Dif') Is Not Null Drop Table #Tab_Dif
 
 /*
+Use [REBUAUTST01];
 
-	Select Top(10) * From UnidadePer
-	Select Top(10) * From	dbo.UnidadeDetalhe
-	Select Top(10) * From Obras
-	Select Top(10) * From PrdSrv
-	Select Top(10) * From PrdSrvCat
-	Select Top(10) * From CategoriasDeProduto
-	Select Top(10) * From CategoriaStatusUnidadePer
-	Select Top(10) * From LogBairro
-	Select Top(10) * From Logradouro
-	Select Top(10) * From Bairro
-	Select Top(10) * From Cidades
-	Select Top(10) * From ItensVenda
-	Select Top(10) * From Vendas
-	Select Top(10) * From Pessoas
-	Select Top(10) * From REBUAUPRD01_COMPLEMENTO.dbo.VwREBr_UAU_UnidadeDepositarios
-	Select Top(10) * From REBUAUPRD01_COMPLEMENTO.dbo.VwREBr_UAU_UnidadeProprietarios
-	Select Top(10) * From REBUAUPRD01_COMPLEMENTO.dbo.FIDC_DePara
+Set NoCount On;   
+
+Declare  @Id Int
+Set @Id = (SELECT MAX(NumProd_psc) FROM [dbo].PrdSrv);
+
+-- Inserção Tabela dbo.[PrdSrv]
+
+INSERT INTO [dbo].[PrdSrv]
+           ([NumProd_psc]
+           ,[Descricao_psc]
+           ,[Unidade_psc]
+           ,[TabPer_psc]
+           ,[Status_psc]
+           ,[UsrCad_psc]
+           ,[AtInat_psc]
+           ,[Obs_psc]
+           ,[Anexos_psc]
+           ,[NCM_psc]
+           ,[TipoUnidade_psc]
+           ,[NumApi_psc]
+           ,[Atividade_psc]
+           ,[CEST_psc]
+           ,[NumCsf_psc])
+		 
+
+Select
+	Row_Number() Over(Order By Nome_Real_do_Empreendimento) + @Id  As NumProd_psc
+	,P.Nome_Real_do_Empreendimento	 As [Descricao_psc]
+	,'un'		As [Unidade_psc]
+	,NULL		As [TabPer_psc]
+	,1			As [Status_psc]
+	,'psTalent'	As [UsrCad_psc]
+	,0			As [AtInat_psc]
+	,''			As [Obs_psc]
+	,NULL		As [Anexos_psc]
+	,NULL		As [NCM_psc]
+	,02			As [TipoUnidade_psc]
+	,2			As [NumApi_psc]
+	,1			As [Atividade_psc]
+	,NULL		As [CEST_psc]
+	,NULL			As [NumCsf_psc]
+
+From [REBUAUPRD01_COMPLEMENTO].[dbo].[DadosEmpreendimentos_201910] P
+
+Where Not Exists(Select 1 From [dbo].[PrdSrv] pr With(NoLock) Where pr.Descricao_psc = p.Nome_Real_do_Empreendimento)
+And P.Nome_Real_do_Empreendimento Is Not Null
 
 */
+
+-- ,DP.Projeto_fidcdp		As 'ProdProjeto' -- Id_PROJETO
+
+/*
+Select * From dbo.Logradouro EL where el.Num_logr = 2599050
+select  * From dbo.LogBairro el where el.NumLogr_logBrr = 2599050 
+select * From dbo.UnidadeDetalhe ud WHERE UD.NumBrrLogBrr_udt = 2599050
+OR NumBrrLogBrr_udt = 2599050
+
+	On EBL.NumBrr_logBrr = UD.NumBrrLogBrr_udt
+			And EBL.NumLogr_logBrr = UD.NumLogrLogBrr_udt
+
+			LogBairro
+
+
+where el.Num_logr between 2599050 And 2599089
+*/
+--dbo.Bairro EB
+--dbo.Cidades EC
+--dbo.UnidadeDetalhe UD
+
+
+--And t.ProdEndBairro <> '..'
+
+--'14800700'	'14800700'
+
+
+--================================================================================================ Select ----
+/*select * From #Tb_Estoque t
+where t.ProdProjeto Not In(SELECT ID_Projeto fROM [REBUAUPRD01_COMPLEMENTO].[dbo].[DadosEmpreendimentos_201910])*/
+
+
+/*
+select From  [REBUAUPRD01_COMPLEMENTO].[dbo].[DadosEmpreendimentos_201910]
+ where spe is null
+where ID_Projeto = 'P0056-B'
+*/
+
