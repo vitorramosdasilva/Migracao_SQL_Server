@@ -2,7 +2,7 @@ Use [REBUAUTST01];
 
 Set NoCount On;   
 
-Select top(5)
+Select --top(5)
 	    GetDate()				As 'PesqDataHora' 
 	   ,(Year(GetDate()) * 100) + 
 			   Month(GetDate()) As 'PesqMesAno' 
@@ -11,7 +11,7 @@ Select top(5)
 	   ,UP.Obra_unid			As 'ObraCod' 
 	   ,O.descr_obr				As 'ObraDesc'
 	   ,DP.Projeto_fidcdp		As 'ProdProjeto' -- Id_PROJETO
-	  -- ,CHARINDEX('-', UP.Prod_unid, 1) AS ProdCodTeste
+
 	   ,UP.Prod_unid			As 'ProdCod' 
 	   ,P.Descricao_psc			As 'ProdDesc' --Nome_Real_Empreendimento
 	   ,PC.CodCat_cp			As 'ProdCategCod' 
@@ -57,15 +57,17 @@ Select top(5)
 	   ,V.Data_Ven				As 'VendaData' 
 	   ,V.Cliente_Ven			As 'ClienteCodigo' 
 	   ,C.nome_pes				As 'ClienteNome'
+	   ,v.ValorTot_Ven			As 'ValorVenda'
 
 		--UDoP.cod_pes			As 'UnidINTERVENIENTE_DepositarioCodigo' 
 		--UDoP.nome_pes			As 'UnidINTERVENIENTE_DepositarioNome'
 		 
-	   ,UPrs.*
-	   ,UDo.*
+	   --,UPrs.*
+	   --,UDo.*
 
+	   --select Up.*, Ud.*
   From dbo.UnidadePer UP With (NoLock)
-   
+ 
 	   Left Join dbo.UnidadeDetalhe UD With (NoLock)  
 			On UD.Empresa_udt	= UP.Empresa_unid 
 			And UD.Prod_udt		= UP.Prod_unid 
@@ -139,9 +141,11 @@ Select top(5)
 			--And HSU.NumProd_hst = UP.Prod_unid 
 			--And HSU.NumPer_hst  = UP.NumPer_unid
 
- Where (UP.Empresa_unid Between 30000 And 39999 
-		Or UP.Empresa_unid  = 20000) 
-		And UP.Prod_unid	>	9999
+ Where 
+ 
+ --(UP.Empresa_unid Between 30000 And 39999 
+	--	Or UP.Empresa_unid  = 20000) 
+		--And UP.Prod_unid	>	9999
 
 		/*And UP.Empresa_unid not in (30030)*/ 
 		--And UP.Obra_unid /*like '2S08%' */in ('2S18A''2S18B''3S18A''3S18B''3S36A')
@@ -150,16 +154,40 @@ Select top(5)
 	    --And UD.NumBrrLogBrr_udt=57111
 	    --And UP.Prod_unid in (1008420084)
 
-		And UP.Prod_unid = 20056
+		--And 
+		--UP.Prod_unid = 20056
+		--And
+
+		V.ValorTot_Ven Is Not Null
+		And UP.Vendido_unid In(0)
+
 		--And UP.Identificador_unid = 'Q01-L01'
 		-- Order by UP.Empresa_unid, UP.Obra_unid, UP.Identificador_unid
 Order by 
- P.Descricao_psc 
-,UP.Identificador_unid
+ --P.Descricao_psc 
+--,UP.Identificador_unid
+v.ValorTot_Ven
+
+/*
+Select --top(10)
+ * From dbo.UnidadePer
+where --NumPer_unid = 9754
+--and 
+Prod_unid = 10059
+and Empresa_unid = 1
+ 
+Select --top(10) 
+* From dbo.UnidadeDetalhe
+where 
+--NumPer_udt = 9754
+--and 
+Prod_udt = 10059
+and Empresa_udt = 1
 
 Select Top(10) * From  [REBUAUPRD01_COMPLEMENTO].[dbo].[DadosEmpreendimentos_201910]
 --Select Top(50) * From  REBUAUPRD01_COMPLEMENTO.dbo.VwREBr_UAU_UnidadeDepositarios 
 --Select Top(50) * From REBUAUPRD01_COMPLEMENTO.dbo.VwREBr_UAU_UnidadeProprietarios
+*/
 
 /*
 
