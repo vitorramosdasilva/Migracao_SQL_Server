@@ -23,7 +23,7 @@ Into #Tb_Urplan_Nao_Existe
 								 
 From dbo.UnidadePer per
 Where per.Empresa_unid < 19999
---And per.Prod_unid > 10000
+And per.Prod_unid > 10000
 And								
 Not Exists(Select 1 
 			From UnidadeProprietario Pro 
@@ -85,11 +85,10 @@ Left Join UnidadeProprietario UniP --
 	Where  UniP.Empresa_unp Is Not Null									
 	And
 	Not Exists(Select 1 
-				From UnidadeProprietario Pro 
+				From  UnidadeProprietario Pro 
 				Where Urp.Empresa_unid = Pro.Empresa_unp
-				And 
-				Urp.NumPer_unid   = Pro.NumPer_unp
-				And Urp.Prod_unid = Pro.Prod_unp
+				And	  Urp.NumPer_unid   = Pro.NumPer_unp
+				And   Urp.Prod_unid = Pro.Prod_unp
 				)											
 
 Order By 1
@@ -112,3 +111,5 @@ Else
 		Rollback Transaction
 	End
 
+
+	If Object_Id('tempdb..#Tb_Urplan_Nao_Existe')	Is Not Null Drop Table #Tb_Urplan_Nao_Existe

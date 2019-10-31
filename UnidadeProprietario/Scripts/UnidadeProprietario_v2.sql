@@ -63,7 +63,7 @@ From dbo.UnidadePer UP with (nolock)
 		On DP.Empreendimento_fidcdp = p.Descricao_psc
 
 	
-Where (UP.Empresa_unid Between 1 And 1500
+Where (UP.Empresa_unid < 1900
 		--Or 
 		--UP.Empresa_unid Between 3000 And 3999
 		)		
@@ -251,8 +251,13 @@ Else
 
 IF OBJECT_ID('tempdb..#Tb_Pessoas')		IS NOT NULL DROP TABLE #Tb_Pessoas
 
+/*
+select * From unidadeProprietario p
+Where p.Empresa_unp = 27
+And p.Prod_unp = 1006
+and p.NumPer_unp = 1
 
-
+*/
 
 -----     Validações ....
 
