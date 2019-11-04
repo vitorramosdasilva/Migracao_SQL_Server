@@ -82,7 +82,7 @@ Order By 1
 
 
 
--- Inserção de Clientes Que Não Existem Em UnidadeProprietario pela Junção das Tabelas #Tb_Brl e #Tb_Urplan por br.Identificador_unid e br.Prod_unid
+-- InserÃ§Ã£o de Clientes Que NÃ£o Existem Em UnidadeProprietario pela JunÃ§Ã£o das Tabelas #Tb_Brl e #Tb_Urplan por br.Identificador_unid e br.Prod_unid
 
 Insert Into [dbo].[UnidadeProprietario]
 ([Empresa_unp]
@@ -128,7 +128,7 @@ Left Join #Tb_Urplan pl
 Where 
 IsNull(br.CodPes_unp,pl.CodPes_unp) Is Not Null
 
--- Validação das chaves PK e FK da Tabela UnidadeProprietario
+-- ValidaÃ§Ã£o das chaves PK e FK da Tabela UnidadeProprietario
 And Not Exists(Select 1 From UnidadeProprietario UnP
 					Where					
 						br.Empresa_unid	=	unp.Empresa_unp
@@ -159,6 +159,3 @@ Else
 
 If Object_Id('tempdb..#Tb_Brl')	Is Not Null Drop Table #Tb_Brl
 If Object_Id('tempdb..#Tb_Urplan')	Is Not Null Drop Table #Tb_Urplan
-
-
-
