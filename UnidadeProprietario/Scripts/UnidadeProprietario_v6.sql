@@ -6,8 +6,6 @@ Use [REBUAUPRD01];
 If Object_Id('tempdb..#Tb_Brl')	Is Not Null Drop Table #Tb_Brl
 If Object_Id('tempdb..#Tb_Urplan')	Is Not Null Drop Table #Tb_Urplan
 
-
-
 SET NOEXEC OFF;
 
 BEGIN TRANSACTION; 
