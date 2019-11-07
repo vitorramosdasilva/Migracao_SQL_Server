@@ -1,12 +1,10 @@
 Use [REBUAUTST01];
 
 -- Desenvolvido Por Vitor Ramos
--- Data: 06/11/2019 15:36
+-- Data: 07/11/2019 15:36
 
 If Object_Id('tempdb..#Tb_Brl')		Is Not Null Drop Table #Tb_Brl
 If Object_Id('tempdb..#Tb_Urplan')	Is Not Null Drop Table #Tb_Urplan
-If Object_Id('tempdb..#Tb_Tudo')	Is Not Null Drop Table #Tb_Tudo
-
 
 
 SET NOEXEC OFF;
@@ -149,8 +147,9 @@ Left join Pessoas ps
 	On  br.CodPes_unp = ps.cod_pes
 
 Where ps.cod_pes Is Null
+--Usuario Pessoa Nulo
 	And pl.CodPes_unp Is Not Null
-	--Where br.Prod_unid = 10041 And br.Identificador_unid = 'Q03-l21'
+--Usuario Urbplan Não é Nulo
 And
 Not Exists(Select 1 From UnidadePer Per With (NoLock)
 					Left Join UnidadeProprietario UnP With (NoLock)
@@ -317,7 +316,7 @@ Inner Join #Tb_Erros E
 	And E.Empresa_unid  = Up.Empresa_unp
 	And E.Prod_unid		= Up.Prod_unp
 
-Print('Expurgo Dados Erros ...')
+Print('Expurgo Quantidade Quadrilote BRL > Urbplan ...')
 
 	
 Declare @finished BIT;
@@ -340,22 +339,24 @@ Else
 
 If Object_Id('tempdb..#Tb_Brl')		Is Not Null Drop Table #Tb_Brl
 If Object_Id('tempdb..#Tb_Urplan')	Is Not Null Drop Table #Tb_Urplan
-If Object_Id('tempdb..#Tb_Tudo')	Is Not Null Drop Table #Tb_Tudo
-If Object_Id('tempdb..#Tb_Nulos')	Is Not Null Drop Table #Tb_Nulos
 If Object_Id('tempdb..#Tb_Erros')	Is Not Null Drop Table #Tb_Erros
 
 
-	/*select * From #tb_erros e
+-- Validações
+
+/*
+Select * From #tb_erros e
 	Where e.prod_unid  = 10102
 	and e.Identificador_unid = 'Q14-L26'
-	and e.Empresa_unid = 30014*/
+	and e.Empresa_unid = 30014	
+*/
 
-	
+---------   -----------
 
---------- Validar Tudo  -----------
 /*
+
 Use [REBUAUTST01];
-	delete  From UnidadeProprietario 
+	Delete  From UnidadeProprietario 
 	Where 
 	--DataCad_unp = '2019-11-04'
 	--And 
