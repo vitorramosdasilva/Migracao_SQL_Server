@@ -214,7 +214,7 @@ If @@Error != 0 Set NoExec On;
 Print('Valida Import ...')
 
 
---Use [REBUAUTST01];
+Use [REBUAUTST01];
 Declare @UserPro  Varchar(20) = 'PSTALENT';
 
 Select 
@@ -247,6 +247,9 @@ Order by
 
 Print('Carrega #Tb_Brl Validação ...')
 
+
+
+
 Select 
    Per.Empresa_unid
   ,Per.Prod_unid
@@ -275,33 +278,33 @@ From UnidadePer Per
  Per.Prod_unid,Per.Identificador_unid
 
 Print('Carrega #Tb_UrPlan Validação ...')
- 
 
 
 Select * 
 	Into #Tb_Erros
 From (Select 
-		--P.
+		--P.Qtd As Qtd_Urplan
 		--,
 		B.* 
 		,Case 
-			When B.Qtd > P.Qtd  Then 'ERRADO'
+			When B.Qtd < P.Qtd    Then 'ERRADO_MAIOR'
+			When B.Qtd > P.Qtd    Then 'ERRADO_MENOR'
 		Else						'OK' 
 		End As Valida 
-	 From #Tb_UrPlan P
-	 Left Join #Tb_Brl B
+	 From #Tb_Brl  B
+	 Left Join  #Tb_UrPlan P
 		On p.Prod_unid = b.prod_unid
 		And p.Identificador_unid  =  b.Identificador_unid 
 		Where 
 		B.Prod_unid Is Not Null
 	) As Base 
-Where Base.Valida = 'ERRADO'
+Where Base.Valida in('ERRADO_MAIOR','ERRADO_MENOR')
 
  Print('Carrega #Tb_Erros Validação ...')
 
 
 -- Deleta os Casos com a quantidade incorreta de Quadrilote em comparacacao aos da Urplan
-
+--Select *
 Delete up
 From UnidadeProprietario Up
 Inner Join UnidadePer Per
@@ -315,6 +318,7 @@ Inner Join #Tb_Erros E
 	On E.Identificador_unid = Per.Identificador_unid
 	And E.Empresa_unid  = Up.Empresa_unp
 	And E.Prod_unid		= Up.Prod_unp
+	Where E.Valida = 'ERRADO_MAIOR'
 
 Print('Expurgo Quantidade Quadrilote BRL > Urbplan ...')
 
@@ -353,10 +357,10 @@ Select * From #tb_erros e
 
 ---------   -----------
 
-/*
 
-Use [REBUAUTST01];
-	Delete  From UnidadeProprietario 
+/*
+Use [REBUAUPRD01];
+	select * From UnidadeProprietario 
 	Where 
 	--DataCad_unp = '2019-11-04'
 	--And 
