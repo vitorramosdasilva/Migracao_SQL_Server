@@ -1,12 +1,12 @@
 Use [REBUAUTST01];
 
 -- Desenvolvido Por Vitor Ramos
--- Data: 04/11/2019 14:21
+-- Data: 06/11/2019 15:36
 
 If Object_Id('tempdb..#Tb_Brl')		Is Not Null Drop Table #Tb_Brl
 If Object_Id('tempdb..#Tb_Urplan')	Is Not Null Drop Table #Tb_Urplan
 If Object_Id('tempdb..#Tb_Tudo')	Is Not Null Drop Table #Tb_Tudo
-If Object_Id('tempdb..#Tb_Nulos')	Is Not Null Drop Table #Tb_Nulos
+
 
 
 SET NOEXEC OFF;
@@ -114,6 +114,8 @@ Insert Into [dbo].[UnidadeProprietario]
 ,[EmpresaCalcReceita_unp]
 )
 
+
+
 Select distinct
 
 	 br.Empresa_unid 
@@ -150,15 +152,24 @@ Where ps.cod_pes Is Null
 	And pl.CodPes_unp Is Not Null
 	--Where br.Prod_unid = 10041 And br.Identificador_unid = 'Q03-l21'
 And
-Not Exists(Select 1 From UnidadeProprietario UnP
+Not Exists(Select 1 From UnidadePer Per With (NoLock)
+					Left Join UnidadeProprietario UnP With (NoLock)
+						On  Per.Empresa_unid = UnP.Empresa_unp
+						And Per.Prod_unid = UnP.Prod_unp
+						And Per.NumPer_unid = UnP.NumPer_unp
+					
+				
 				Where					
-					br.Empresa_unid		= unp.Empresa_unp				
-				And br.Prod_unid		= UnP.Prod_unp				
-				And br.NumPer_unid  =  UnP.NumPer_unp
-				And pl.CodPes_unp = UnP.CodPes_unp
-)
+					br.Empresa_unid			= unp.Empresa_unp				
+				And br.Prod_unid			= UnP.Prod_unp				
+				And br.NumPer_unid			= UnP.NumPer_unp
+				And br.Identificador_unid	= Per.Identificador_unid
 
+				
+				
+		  )
 
+			
 
 
 Print('Insert Tabela UnidadePropriedade ....')
@@ -186,8 +197,6 @@ GO
 
 If Object_Id('tempdb..#Tb_Brl')		Is Not Null Drop Table #Tb_Brl
 If Object_Id('tempdb..#Tb_Urplan')	Is Not Null Drop Table #Tb_Urplan
-If Object_Id('tempdb..#Tb_Tudo')	Is Not Null Drop Table #Tb_Tudo
-If Object_Id('tempdb..#Tb_Nulos')	Is Not Null Drop Table #Tb_Nulos
 If Object_Id('tempdb..#Tb_Erros')	Is Not Null Drop Table #Tb_Erros
 
 
@@ -206,7 +215,7 @@ If @@Error != 0 Set NoExec On;
 Print('Valida Import ...')
 
 
-Use [REBUAUTST01];
+--Use [REBUAUTST01];
 Declare @UserPro  Varchar(20) = 'PSTALENT';
 
 Select 
@@ -266,26 +275,27 @@ From UnidadePer Per
  Order by   
  Per.Prod_unid,Per.Identificador_unid
 
- Print('Carrega #Tb_UrPlan Validação ...')
+Print('Carrega #Tb_UrPlan Validação ...')
  
+
+
 Select * 
 	Into #Tb_Erros
-From ( 
- Select 
-	--P.
-	--,
-	B.* 
-	,Case 
-		When P.Qtd < B.Qtd Then 'ERRADO'
-	Else						'OK' 
-	End As Valida 
- From #Tb_UrPlan P
- Left Join #Tb_Brl B
-	On p.Prod_unid = b.prod_unid
-	And p.Identificador_unid  =  b.Identificador_unid 
- Where B.Prod_unid Is Not Null
-		) 
-		As Base 
+From (Select 
+		--P.
+		--,
+		B.* 
+		,Case 
+			When B.Qtd > P.Qtd  Then 'ERRADO'
+		Else						'OK' 
+		End As Valida 
+	 From #Tb_UrPlan P
+	 Left Join #Tb_Brl B
+		On p.Prod_unid = b.prod_unid
+		And p.Identificador_unid  =  b.Identificador_unid 
+		Where 
+		B.Prod_unid Is Not Null
+	) As Base 
 Where Base.Valida = 'ERRADO'
 
  Print('Carrega #Tb_Erros Validação ...')
@@ -307,6 +317,7 @@ Inner Join #Tb_Erros E
 	And E.Empresa_unid  = Up.Empresa_unp
 	And E.Prod_unid		= Up.Prod_unp
 
+Print('Expurgo Dados Erros ...')
 
 	
 Declare @finished BIT;
@@ -344,11 +355,12 @@ If Object_Id('tempdb..#Tb_Erros')	Is Not Null Drop Table #Tb_Erros
 --------- Validar Tudo  -----------
 /*
 Use [REBUAUTST01];
-	SELECT *  From UnidadeProprietario 
+	delete  From UnidadeProprietario 
 	Where 
 	--DataCad_unp = '2019-11-04'
 	--And 
 	UsrCad_unp = 'PSTALENT'
 
 */
+
 
